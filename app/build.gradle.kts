@@ -6,15 +6,18 @@ plugins {
 android {
     namespace = "com.vondi.trackshag"
     compileSdk = 34
-
     defaultConfig {
         applicationId = "com.vondi.trackshag"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a"))
+        }
+
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -47,6 +50,8 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+
 }
 
 dependencies {
@@ -66,7 +71,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // MapKit
     implementation(libs.play.services.location)
     implementation(libs.maps.mobile)
 
+    // Services Coroutines
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
 }
