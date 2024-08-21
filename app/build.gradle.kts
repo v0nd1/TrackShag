@@ -71,8 +71,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // MapKit
     implementation(libs.play.services.location)
     implementation(libs.maps.mobile)
+
+    // Services Coroutines
     implementation(libs.kotlinx.coroutines.play.services)
 
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
 }
