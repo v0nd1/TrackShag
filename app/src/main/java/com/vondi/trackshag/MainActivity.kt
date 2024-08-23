@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.vondi.trackshag.navigation.NavScreen
 import com.vondi.trackshag.ui.screens.MapScreen
 import com.vondi.trackshag.ui.theme.TrackShagTheme
 import com.yandex.mapkit.MapKitFactory
@@ -18,7 +19,7 @@ class MainActivity : ComponentActivity() {
         MapKitFactory.initialize(this)
         setContent {
             TrackShagTheme {
-                MapScreen()
+                NavScreen()
             }
         }
 

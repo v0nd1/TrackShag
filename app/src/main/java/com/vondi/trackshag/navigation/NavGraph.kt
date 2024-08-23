@@ -6,6 +6,8 @@ import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.vondi.trackshag.ui.screens.MapScreen
+import com.vondi.trackshag.ui.screens.StepsScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -14,10 +16,10 @@ fun NavGraph(navController: NavHostController) {
         startDestination = Screen.Steps.route
     ) {
         composable(route = Screen.Steps.route){
-
+            StepsScreen()
         }
         composable(route = Screen.Map.route){
-
+            MapScreen()
         }
 
     }

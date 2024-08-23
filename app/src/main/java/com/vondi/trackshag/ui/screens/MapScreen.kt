@@ -41,16 +41,22 @@ import kotlin.math.sqrt
 
 @Composable
 fun MapScreen() {
+    val tag = "MapScreen"
+
     val context = LocalContext.current
     val mapView = remember { MapView(context) }
     var lastKnownLocation by remember { mutableStateOf<Location?>(null) }
+
     var steps by remember { mutableIntStateOf(0) }
     val stepThreshold = 1.0
     var isCameraZoomed by remember { mutableStateOf(false) }
 
+
     val locationPermissionState = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
             startLocationUpdates(context) { location ->
+
+                // Вычисление метров по долготе и широте (см. метод distanceBetweenPoints)
                 lastKnownLocation?.let { lastLocation ->
                     val distance = distanceBetweenPoints(
                         lastLocation.latitude, lastLocation.longitude,
@@ -59,27 +65,37 @@ fun MapScreen() {
                     if (distance >= stepThreshold) {
                         val stepsToAdd = (distance / stepThreshold).toInt()
                         steps += stepsToAdd
-                        Log.d("ShagCheck", "Distance: $distance meters")
-                        Log.d("ShagCheck", "Steps: $steps")
+                        Log.d(tag, "Distance: $distance meters \n Steps: $steps")
                     }
                 }
-                lastKnownLocation = location
+                lastKnownLocation = location // Обновление последней локации
 
+                // Метки на карте, приближение
                 if (!isCameraZoomed) {
-                    updateMapLocation(mapView, location)
+                    val azimuth = 0f
+                    val tilt = 0f
+                    val zoom = 20f
+                    val point = Point(location.latitude, location.longitude)
+                    val cameraPosition = CameraPosition(point, zoom, azimuth, tilt)
+
+                    // Приближение камеры и отметка на карте
+                    mapView.map.move(cameraPosition, Animation(Animation.Type.SMOOTH, 1f), null)
+                    mapView.map.mapObjects.addPlacemark(point)
+
                     isCameraZoomed = true
                 } else {
                     mapView.map.mapObjects.addPlacemark(Point(location.latitude, location.longitude))
                 }
             }
         } else {
-            Log.e("MapWithRealTimeLocation", "Location permission denied")
+            Log.e(tag, "Location permission denied")
         }
     }
 
     LaunchedEffect(Unit) {
         locationPermissionState.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
+
 
     AndroidView(
         modifier = Modifier.fillMaxSize(),
@@ -99,10 +115,13 @@ fun MapScreen() {
 
 private fun startLocationUpdates(context: Context, onLocationUpdated: (Location) -> Unit) {
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+
+    // Запрос локации каждые 60 секунд
+    val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 60000)
             .setMinUpdateIntervalMillis(3000)
             .build()
 
+    // Обновление локации
     val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             locationResult.let {
@@ -113,6 +132,7 @@ private fun startLocationUpdates(context: Context, onLocationUpdated: (Location)
         }
     }
 
+    // Запрос лоакции может быть осуществлен только после запроса разрешений
     if (ActivityCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -126,18 +146,9 @@ private fun startLocationUpdates(context: Context, onLocationUpdated: (Location)
     }
 }
 
-private fun updateMapLocation(mapView: MapView, location: Location) {
-
-    val point = Point(location.latitude, location.longitude)
-    val cameraPosition = CameraPosition(point, 20f, 0f, 0f)
-    mapView.map.move(cameraPosition, Animation(Animation.Type.SMOOTH, 1f), null)
-    Log.e("ShagCheck", "Location updated: ${point.latitude} ${point.longitude}")
-    mapView.map.mapObjects.addPlacemark(point)
-
-}
 
 private fun distanceBetweenPoints(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-    val r = 6371000
+    val r = 6371000 // Радиус Земли
     val lat1Rad = Math.toRadians(lat1)
     val lon1Rad = Math.toRadians(lon1)
     val lat2Rad = Math.toRadians(lat2)
@@ -146,6 +157,7 @@ private fun distanceBetweenPoints(lat1: Double, lon1: Double, lat2: Double, lon2
     val deltaLat = lat2Rad - lat1Rad
     val deltaLon = lon2Rad - lon1Rad
 
+    // Формула Хаверсина https://en.wikipedia.org/wiki/Haversine_formula
     val a = sin(deltaLat / 2).pow(2) + cos(lat1Rad) * cos(lat2Rad) * sin(deltaLon / 2).pow(2)
     val c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
